@@ -7,6 +7,7 @@ pub mod coin;
 pub mod contract;
 pub mod dap;
 pub mod health;
+pub mod iter;
 pub mod node_info;
 pub mod scalars;
 pub mod tx;
