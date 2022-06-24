@@ -21,7 +21,7 @@ if [ "${k8s_provider}" == "eks" ]; then
               --create-namespace \
               --namespace=${k8s_namespace} \
               --wait \
-              --timeout 8000s \
+              --timeout 300s \
               --debug
     
     # Verify Deployment
