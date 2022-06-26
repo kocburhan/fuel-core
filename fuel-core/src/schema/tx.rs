@@ -45,7 +45,7 @@ impl TxQuery {
 
         let (response, receiver) = oneshot::channel();
         let _ = txpool
-            .sender()
+            .client()
             .send(TxPoolMpsc::FindOne { id, response })
             .await;
 
@@ -300,14 +300,14 @@ impl TxMutation {
 
         let includable = if cfg.utxo_validation {
             // include transaction
-            let ret = txpool.sender().insert(vec![Arc::new(tx.clone())]).await?;
+            let ret = txpool.client().insert(vec![Arc::new(tx.clone())]).await?;
             ret.get(0).unwrap().as_ref()?;
 
             // get includable transactions
-            let txs = txpool.sender().includable().await?;
+            let txs = txpool.client().includable().await?;
 
             txpool
-                .sender()
+                .client()
                 .remove(txs.iter().map(|tx| tx.id()).collect())
                 .await?;
             txs

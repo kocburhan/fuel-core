@@ -59,7 +59,7 @@ pub async fn start_modules(config: &Config, database: &Database) -> Result<Modul
 
     block_importer.start().await;
     txpool.start(block_importer.subscribe()).await;
-    block_producer.start(txpool.sender().clone()).await;
+    block_producer.start(txpool.client().clone()).await;
     bft.start(
         relayer_mpsc,
         p2p_broadcast_consensus,

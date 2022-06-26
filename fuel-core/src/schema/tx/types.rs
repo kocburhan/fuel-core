@@ -233,7 +233,7 @@ impl Transaction {
 
         let (response, receiver) = oneshot::channel();
         let _ = txpool
-            .sender()
+            .client()
             .send(TxPoolMpsc::FindOne { id, response })
             .await;
 

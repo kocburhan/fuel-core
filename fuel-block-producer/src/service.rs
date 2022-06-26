@@ -17,7 +17,7 @@ impl Service {
         })
     }
 
-    pub async fn start(&self, _txpool: txpool::Sender) {
+    pub async fn start(&self, _txpool: txpool::TxPoolClient) {
         let mut join = self.join.lock();
         if join.is_none() {
             *join = Some(tokio::spawn(async {}));

@@ -28,9 +28,9 @@ pub trait TxPoolDb:
 }
 
 #[derive(Clone, Deref, DerefMut)]
-pub struct Sender(mpsc::Sender<TxPoolMpsc>);
+pub struct TxPoolClient(mpsc::Sender<TxPoolMpsc>);
 
-impl Sender {
+impl TxPoolClient {
     pub fn new(sender: mpsc::Sender<TxPoolMpsc>) -> Self {
         Self(sender)
     }

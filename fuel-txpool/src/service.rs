@@ -1,6 +1,6 @@
 use crate::{interface::Interface, Config};
 use fuel_core_interfaces::block_importer::ImportBlockBroadcast;
-use fuel_core_interfaces::txpool::{Sender, TxPoolDb, TxPoolMpsc, TxStatusBroadcast};
+use fuel_core_interfaces::txpool::{TxPoolClient, TxPoolDb, TxPoolMpsc, TxStatusBroadcast};
 use std::sync::Arc;
 use tokio::sync::{broadcast, mpsc, Mutex};
 use tokio::task::JoinHandle;
@@ -8,7 +8,7 @@ use tracing::warn;
 
 pub struct Service {
     interface: Arc<Interface>,
-    sender: Sender,
+    client: TxPoolClient,
     broadcast: broadcast::Sender<TxStatusBroadcast>,
     join: Mutex<Option<JoinHandle<mpsc::Receiver<TxPoolMpsc>>>>,
     receiver: Arc<Mutex<Option<mpsc::Receiver<TxPoolMpsc>>>>,
@@ -20,7 +20,7 @@ impl Service {
         let (broadcast, _receiver) = broadcast::channel(100);
         Ok(Self {
             interface: Arc::new(Interface::new(db, broadcast.clone(), config)),
-            sender: Sender::new(sender),
+            client: TxPoolClient::new(sender),
             broadcast,
             join: Mutex::new(None),
             receiver: Arc::new(Mutex::new(Some(receiver))),
@@ -49,7 +49,7 @@ impl Service {
         let mut join = self.join.lock().await;
         let join_handle = join.take();
         if let Some(join_handle) = join_handle {
-            let _ = self.sender.send(TxPoolMpsc::Stop).await;
+            let _ = self.client.send(TxPoolMpsc::Stop).await;
             let receiver = self.receiver.clone();
             Some(tokio::spawn(async move {
                 let ret = join_handle.await;
@@ -64,8 +64,8 @@ impl Service {
         self.broadcast.subscribe()
     }
 
-    pub fn sender(&self) -> &Sender {
-        &self.sender
+    pub fn client(&self) -> &TxPoolClient {
+        &self.client
     }
 }
 
@@ -119,7 +119,7 @@ pub mod tests {
 
         let (response, receiver) = oneshot::channel();
         let _ = service
-            .sender()
+            .client()
             .send(TxPoolMpsc::Insert {
                 txs: vec![tx1, tx2],
                 response,
@@ -133,7 +133,7 @@ pub mod tests {
 
         let (response, receiver) = oneshot::channel();
         let _ = service
-            .sender()
+            .client()
             .send(TxPoolMpsc::FilterByNegative {
                 ids: vec![tx1_hash, tx3_hash],
                 response,
@@ -164,7 +164,7 @@ pub mod tests {
 
         let (response, receiver) = oneshot::channel();
         let _ = service
-            .sender()
+            .client()
             .send(TxPoolMpsc::Insert {
                 txs: vec![tx1, tx2],
                 response,
@@ -177,7 +177,7 @@ pub mod tests {
         assert!(out[1].is_ok(), "Tx2 should be OK, got err:{:?}", out);
         let (response, receiver) = oneshot::channel();
         let _ = service
-            .sender()
+            .client()
             .send(TxPoolMpsc::Find {
                 ids: vec![tx1_hash, tx3_hash],
                 response,
@@ -210,7 +210,7 @@ pub mod tests {
 
         let (response, receiver) = oneshot::channel();
         let _ = service
-            .sender()
+            .client()
             .send(TxPoolMpsc::Insert {
                 txs: vec![tx1.clone(), tx2.clone()],
                 response,
@@ -241,7 +241,7 @@ pub mod tests {
 
         // remove them
         let _ = service
-            .sender()
+            .client()
             .send(TxPoolMpsc::Remove {
                 ids: vec![tx1_hash, tx2_hash],
             })
