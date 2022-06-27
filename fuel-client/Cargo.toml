@@ -18,7 +18,7 @@ path = "src/main.rs"
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "3.1", features = ["derive"] }
-cynic = { version = "1.0", features = ["surf"] }
+cynic = { version = "1.0", optional = true }
 derive_more = { version = "0.99" }
 fuel-tx = { version = "0.13", features = ["serde"] }
 fuel-types = { version = "0.5", features = ["serde"] }
@@ -28,8 +28,16 @@ hex = "0.4"
 itertools = "0.10"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["raw_value"] }
-surf = { version = "2.2", default-features = false, features = ["h1-client-rustls"] }
+surf = { version = "2.2", optional = true }
 thiserror = "1.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cynic = { version = "1.0", features = ["surf"] }
+surf = { version = "2.2", default-features = false, features = ["h1-client-rustls"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+cynic = { version = "1.0", default-features = false, features = ["surf", "surf-wasm-client"] }
+surf = { version = "2.2", default-features = false, features = ["wasm-client"] }
 
 [dev-dependencies]
 insta = "1.8"
