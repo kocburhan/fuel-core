@@ -18,7 +18,7 @@ pub struct ServiceBuilder {
     sender: relayer::Sender,
     receiver: mpsc::Receiver<RelayerRequest>,
     private_key: Option<Vec<u8>>,
-    db: Option<Box<dyn RelayerDb>>,
+    db: Option<Box<dyn RelayerDb>>, 
     import_block_events: Option<broadcast::Receiver<ImportBlockBroadcast>>,
     config: Config,
 }
